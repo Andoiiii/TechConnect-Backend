@@ -83,6 +83,8 @@ clubRouter.get("/hackathon-details/:id", (req, res) => {
   });
 });
 
+
+// Breaker Function
 async function displayClub(clubID, eventID) {
   let retStruct = {};
   await redis.get(`clubs:${clubID}:name`, (err, result) => { retStruct.name = result;})
@@ -95,7 +97,6 @@ async function displayClub(clubID, eventID) {
 
   return retStruct;
 }
-
 
 // GET for the end user - proper formatting etc
 clubRouter.get("/peek/:club/:event", async (req, res) => {
