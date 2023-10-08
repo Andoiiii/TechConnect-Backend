@@ -66,7 +66,7 @@ clubRouter.delete("/hackathon-details/:id", (req, res) => {
     array.forEach((key) => redis.del(key));
   });
   redis.sadd("hacks:temp", delID);
-  redis.sdiff("hacks:", "hacks:temp");
+  redis.sdiffstore("hacks:", "hacks:", "hacks:temp");
   redis.del("hacks:temp");
   return res.status(201).send(`Sucessfully removed ${delID} from the database.`);
 });
@@ -82,5 +82,29 @@ clubRouter.get("/hackathon-details/:id", (req, res) => {
     });
   });
 });
+
+async function displayClub(clubID, eventID) {
+  let retStruct = {};
+  await redis.get(`clubs:${clubID}:name`, (err, result) => { retStruct.name = result;})
+  await redis.get(`clubs:${clubID}:desc`, (err, result) => { retStruct.desc = result;})
+  await redis.get(`clubs:${clubID}:rel`, (err, result) => { retStruct.relevance = result;})
+
+  await redis.get(`hacks:${eventID}:name`, (err, result) => { retStruct.hackathon = result;})
+  await redis.get(`hacks:${eventID}:link`, (err, result) => { retStruct.linkToHackathon = result;})
+  await redis.sinter(`clubs:${clubID}:itrs`, `hacks:${eventID}:type`, (err,result) => { retStruct.events = result;})
+
+  return retStruct;
+}
+
+
+// GET for the end user - proper formatting etc
+clubRouter.get("/peek/:club/:event", async (req, res) => {
+  const clubID = req.params.club;
+  const eventID = req.params.event;
+
+  res.json(await displayClub(clubID,eventID))
+})
+
+
 
 console.log("Clubs Router Online!");
